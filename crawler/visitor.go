@@ -13,10 +13,6 @@ import (
 	"golang.org/x/net/html"
 )
 
-type ShutdownMessage struct {
-	URL string
-}
-
 type VisitFunc func(io.Reader) error
 
 type VisitRequest struct {
@@ -90,7 +86,7 @@ func (visitor *Visitor) Receive(context *actor.Context) {
 func (visitor *Visitor) extractLinks(body io.Reader) ([]string, error) {
 	links := make([]string, 0)
 	tokenizer := html.NewTokenizer(body)
-	baseDomain := visitor.URL.Host // Get the base domain
+	baseDomain := visitor.URL.Host
 
 	for {
 		tokenType := tokenizer.Next()
@@ -142,55 +138,4 @@ func (visitor *Visitor) doVisit(link string, visit VisitFunc) ([]string, error) 
 	}
 
 	return links, nil
-}
-
-type Orchestrator struct {
-	visited    map[string]bool
-	visitors   map[*actor.PID]bool
-	wantedText string
-	baseDomain string // Add base domain field
-}
-
-func NewOrchestrator(wantedText, baseDomain string) actor.Producer {
-	return func() actor.Receiver {
-		return &Orchestrator{
-			visitors:   make(map[*actor.PID]bool),
-			visited:    make(map[string]bool),
-			wantedText: wantedText,
-			baseDomain: baseDomain, // Set base domain
-		}
-	}
-}
-
-func (orchestrator *Orchestrator) Receive(context *actor.Context) {
-	switch msg := context.Message().(type) {
-	case VisitRequest:
-		orchestrator.handleVisitRequest(context, msg)
-	case ShutdownMessage:
-		slog.Info("wanted text found, shutting down orchestrator", "url", msg.URL)
-		context.Engine().Poison(context.PID())
-	case actor.Started:
-		slog.Info("orchestrator started")
-	case actor.Stopped:
-		slog.Info("orchestrator stopped")
-	}
-}
-
-func (orchestrator *Orchestrator) handleVisitRequest(context *actor.Context, msg VisitRequest) error {
-	for _, link := range msg.links {
-		parsedLink, err := url.Parse(link)
-		if err != nil {
-			return err
-		}
-
-		// Ensure we only visit links from the same base domain
-		if parsedLink.Host == orchestrator.baseDomain {
-			if _, ok := orchestrator.visited[link]; !ok {
-				slog.Info("visiting url", "url", link)
-				context.SpawnChild(NewVisitor(parsedLink, context.PID(), msg.visitFunc, orchestrator.wantedText), "visitor/"+link)
-				orchestrator.visited[link] = true
-			}
-		}
-	}
-	return nil
 }
