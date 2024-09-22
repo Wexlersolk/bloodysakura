@@ -7,29 +7,42 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/anthdm/hollywood/actor"
 	"golang.org/x/net/html"
 )
 
+type ShutdownMessage struct {
+	URL string
+}
+
 type VisitFunc func(io.Reader) error
 
 type VisitRequest struct {
-	links     []string
-	visitFunc VisitFunc
+	links      []string
+	visitFunc  VisitFunc
+	wantedText string
 }
 
-func NewVisitRequest(links []string) VisitRequest {
+func NewVisitRequest(links []string, wantedText string) VisitRequest {
 	return VisitRequest{
-		links: links,
+		links:      links,
+		wantedText: wantedText,
 		visitFunc: func(r io.Reader) error {
 			fmt.Println("==========================")
 			b, err := io.ReadAll(r)
 			if err != nil {
 				return err
 			}
-			fmt.Println(string(b))
+			pageContent := string(b)
+			fmt.Println(pageContent)
 			fmt.Println("==========================")
+
+			if strings.Contains(pageContent, wantedText) {
+				fmt.Printf("Wanted text '%s' found!\n", wantedText)
+				return fmt.Errorf("wanted text found")
+			}
 			return nil
 		},
 	}
@@ -39,35 +52,47 @@ type Visitor struct {
 	managerPID *actor.PID
 	URL        *url.URL
 	visitFn    VisitFunc
+	wantedText string
 }
 
-func NewVisitor(url *url.URL, mpid *actor.PID, visitFn VisitFunc) actor.Producer {
+func NewVisitor(url *url.URL, mpid *actor.PID, visitFn VisitFunc, wantedText string) actor.Producer {
 	return func() actor.Receiver {
 		return &Visitor{
 			URL:        url,
 			managerPID: mpid,
 			visitFn:    visitFn,
+			wantedText: wantedText,
 		}
 	}
 }
 
-func (v *Visitor) Receive(c *actor.Context) {
-	switch c.Message().(type) {
+func (visitor *Visitor) Receive(context *actor.Context) {
+	switch context.Message().(type) {
 	case actor.Started:
-		slog.Info("visitor started", "url", v.URL)
-		links, err := v.doVisit(v.URL.String(), v.visitFn)
+		slog.Info("visitor started", "url", visitor.URL)
+		links, err := visitor.doVisit(visitor.URL.String(), visitor.visitFn)
 		if err != nil {
-			slog.Error("visit error", "err", err)
+			if err.Error() == "wanted text found" {
+				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
+				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
+				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
+				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
+				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
+				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
+				context.Send(visitor.managerPID, ShutdownMessage{URL: visitor.URL.String()})
+			} else {
+				slog.Error("visit error", "err", err)
+			}
 			return
 		}
-		c.Send(v.managerPID, NewVisitRequest(links))
-		c.Engine().Poison(c.PID())
+		context.Send(visitor.managerPID, NewVisitRequest(links, visitor.wantedText))
+		context.Engine().Poison(context.PID())
 	case actor.Stopped:
-		slog.Info("visitor stopped", "url", v.URL)
+		slog.Info("visitor stopped", "url", visitor.URL)
 	}
 }
 
-func (v *Visitor) extractLinks(body io.Reader) ([]string, error) {
+func (visitor *Visitor) extractLinks(body io.Reader) ([]string, error) {
 	links := make([]string, 0)
 	tokenizer := html.NewTokenizer(body)
 
@@ -86,7 +111,7 @@ func (v *Visitor) extractLinks(body io.Reader) ([]string, error) {
 						if err != nil {
 							return links, err
 						}
-						actualLink := v.URL.ResolveReference(lurl)
+						actualLink := visitor.URL.ResolveReference(lurl)
 						links = append(links, actualLink.String())
 					}
 				}
@@ -95,7 +120,7 @@ func (v *Visitor) extractLinks(body io.Reader) ([]string, error) {
 	}
 }
 
-func (v *Visitor) doVisit(link string, visit VisitFunc) ([]string, error) {
+func (visitor *Visitor) doVisit(link string, visit VisitFunc) ([]string, error) {
 	baseURL, err := url.Parse(link)
 	if err != nil {
 		return []string{}, err
@@ -108,52 +133,58 @@ func (v *Visitor) doVisit(link string, visit VisitFunc) ([]string, error) {
 	w := &bytes.Buffer{}
 	r := io.TeeReader(resp.Body, w)
 
-	links, err := v.extractLinks(r)
+	links, err := visitor.extractLinks(r)
 	if err != nil {
 		return []string{}, err
 	}
 
 	if err := visit(w); err != nil {
-		return []string{}, err
+		return links, err
 	}
 
 	return links, nil
 }
 
-type Manager struct {
-	visited  map[string]bool
-	visitors map[*actor.PID]bool
+type Orchestrator struct {
+	visited    map[string]bool
+	visitors   map[*actor.PID]bool
+	wantedText string
 }
 
-func NewManager() actor.Producer {
+func NewOrchestrator(wantedText string) actor.Producer {
 	return func() actor.Receiver {
-		return &Manager{
-			visitors: make(map[*actor.PID]bool),
-			visited:  make(map[string]bool),
+		return &Orchestrator{
+			visitors:   make(map[*actor.PID]bool),
+			visited:    make(map[string]bool),
+			wantedText: wantedText,
 		}
 	}
 }
 
-func (m *Manager) Receive(c *actor.Context) {
-	switch msg := c.Message().(type) {
+func (orchestrator *Orchestrator) Receive(context *actor.Context) {
+	switch msg := context.Message().(type) {
 	case VisitRequest:
-		m.handleVisitRequest(c, msg)
+		orchestrator.handleVisitRequest(context, msg)
+	case ShutdownMessage:
+		slog.Info("wanted text found, shutting down orchestrator", "url", msg.URL)
+		context.Engine().Poison(context.PID())
 	case actor.Started:
-		slog.Info("manager started")
+		slog.Info("orchestrator started")
 	case actor.Stopped:
+		slog.Info("orchestrator stopped")
 	}
 }
 
-func (m *Manager) handleVisitRequest(c *actor.Context, msg VisitRequest) error {
+func (orchestrator *Orchestrator) handleVisitRequest(context *actor.Context, msg VisitRequest) error {
 	for _, link := range msg.links {
-		if _, ok := m.visited[link]; !ok {
+		if _, ok := orchestrator.visited[link]; !ok {
 			slog.Info("visiting url", "url", link)
 			baseURL, err := url.Parse(link)
 			if err != nil {
 				return err
 			}
-			c.SpawnChild(NewVisitor(baseURL, c.PID(), msg.visitFunc), "visitor/"+link)
-			m.visited[link] = true
+			context.SpawnChild(NewVisitor(baseURL, context.PID(), msg.visitFunc, orchestrator.wantedText), "visitor/"+link)
+			orchestrator.visited[link] = true
 		}
 	}
 	return nil
