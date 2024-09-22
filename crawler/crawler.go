@@ -74,11 +74,6 @@ func (visitor *Visitor) Receive(context *actor.Context) {
 		if err != nil {
 			if err.Error() == "wanted text found" {
 				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
-				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
-				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
-				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
-				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
-				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
 				context.Send(visitor.managerPID, ShutdownMessage{URL: visitor.URL.String()})
 			} else {
 				slog.Error("visit error", "err", err)
@@ -95,6 +90,7 @@ func (visitor *Visitor) Receive(context *actor.Context) {
 func (visitor *Visitor) extractLinks(body io.Reader) ([]string, error) {
 	links := make([]string, 0)
 	tokenizer := html.NewTokenizer(body)
+	baseDomain := visitor.URL.Host // Get the base domain
 
 	for {
 		tokenType := tokenizer.Next()
@@ -112,7 +108,10 @@ func (visitor *Visitor) extractLinks(body io.Reader) ([]string, error) {
 							return links, err
 						}
 						actualLink := visitor.URL.ResolveReference(lurl)
-						links = append(links, actualLink.String())
+
+						if actualLink.Host == baseDomain {
+							links = append(links, actualLink.String())
+						}
 					}
 				}
 			}
@@ -149,14 +148,16 @@ type Orchestrator struct {
 	visited    map[string]bool
 	visitors   map[*actor.PID]bool
 	wantedText string
+	baseDomain string // Add base domain field
 }
 
-func NewOrchestrator(wantedText string) actor.Producer {
+func NewOrchestrator(wantedText, baseDomain string) actor.Producer {
 	return func() actor.Receiver {
 		return &Orchestrator{
 			visitors:   make(map[*actor.PID]bool),
 			visited:    make(map[string]bool),
 			wantedText: wantedText,
+			baseDomain: baseDomain, // Set base domain
 		}
 	}
 }
@@ -177,14 +178,18 @@ func (orchestrator *Orchestrator) Receive(context *actor.Context) {
 
 func (orchestrator *Orchestrator) handleVisitRequest(context *actor.Context, msg VisitRequest) error {
 	for _, link := range msg.links {
-		if _, ok := orchestrator.visited[link]; !ok {
-			slog.Info("visiting url", "url", link)
-			baseURL, err := url.Parse(link)
-			if err != nil {
-				return err
+		parsedLink, err := url.Parse(link)
+		if err != nil {
+			return err
+		}
+
+		// Ensure we only visit links from the same base domain
+		if parsedLink.Host == orchestrator.baseDomain {
+			if _, ok := orchestrator.visited[link]; !ok {
+				slog.Info("visiting url", "url", link)
+				context.SpawnChild(NewVisitor(parsedLink, context.PID(), msg.visitFunc, orchestrator.wantedText), "visitor/"+link)
+				orchestrator.visited[link] = true
 			}
-			context.SpawnChild(NewVisitor(baseURL, context.PID(), msg.visitFunc, orchestrator.wantedText), "visitor/"+link)
-			orchestrator.visited[link] = true
 		}
 	}
 	return nil
