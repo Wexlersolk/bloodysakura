@@ -35,7 +35,7 @@ func (orchestrator *Orchestrator) Receive(context *actor.Context) {
 		context.Engine().Poison(context.PID())
 	case actor.Started:
 		slog.Info("orchestrator started")
-		orchestrator.handleSearchBar(context)
+		orchestrator.HandleSearchBar(context)
 	case actor.Stopped:
 		slog.Info("orchestrator stopped")
 	}
@@ -56,9 +56,5 @@ func (orchestrator *Orchestrator) HandleVisitRequest(context *actor.Context, msg
 			}
 		}
 	}
-	return nil
-}
-
-func (orchestrator *Orchestrator) handleSearchBar(context *actor.Context) error {
 	return nil
 }
