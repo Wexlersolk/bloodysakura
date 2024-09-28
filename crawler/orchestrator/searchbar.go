@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"net/url"
 
+	"bloodysakura/crawler/visitor"
+
 	"github.com/anthdm/hollywood/actor"
 	"golang.org/x/net/html"
 )
 
-func (orchestrator *Orchestrator) handleSearchBar(context *actor.Context) error {
+func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error {
 	// Get the current URL (assuming you have a starting point or current link)
 	initialLink := "https://example.com" // Replace this with the starting link
 	parsedLink, err := url.Parse(initialLink)
@@ -50,7 +52,7 @@ func (orchestrator *Orchestrator) handleSearchBar(context *actor.Context) error 
 		}
 
 		// Call handleVisitRequest with the new links
-		return orchestrator.handleVisitRequest(context, NewVisitRequest(newLinks, orchestrator.wantedText))
+		return orchestrator.HandleVisitRequest(context, visitor.NewVisitRequest(newLinks, orchestrator.wantedText))
 	}
 
 	return nil
@@ -128,5 +130,5 @@ func (orchestrator *Orchestrator) submitSearchForm(baseURL *url.URL, formData ur
 // Function to extract links from a page
 func (orchestrator *Orchestrator) extractLinksFromPage(body io.Reader) ([]string, error) {
 	// Extract links using the same method as in Visitor
-	return (&Visitor{URL: &url.URL{}}).ExtractLinks(body)
+	return (&visitor.Visitor{URL: &url.URL{}}).ExtractLinks(body)
 }
