@@ -1,7 +1,8 @@
 package main
 
 import (
-	"bloodysakura/crawler"
+	"bloodysakura/crawler/orchestrator"
+	"bloodysakura/crawler/visitor"
 	"log"
 	"net/url"
 	"os"
@@ -31,11 +32,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pid := engine.Spawn(crawler.NewOrchestrator(wantedText, parsedURL.Host), "manager")
+	pid := engine.Spawn(orchestrator.NewOrchestrator(wantedText, parsedURL.Host), "manager")
 
 	time.Sleep(time.Millisecond * 200)
 
-	engine.Send(pid, crawler.NewVisitRequest([]string{visitURL}, wantedText))
+	engine.Send(pid, visitor.NewVisitRequest([]string{visitURL}, wantedText))
 
 	time.Sleep(time.Second * 1000)
 }

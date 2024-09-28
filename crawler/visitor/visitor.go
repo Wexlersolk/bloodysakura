@@ -1,4 +1,4 @@
-package crawler
+package visitor
 
 import (
 	"bytes"
@@ -16,16 +16,20 @@ import (
 type VisitFunc func(io.Reader) error
 
 type VisitRequest struct {
-	links      []string
-	visitFunc  VisitFunc
+	Links      []string
+	VisitFunc  VisitFunc
 	wantedText string
+}
+
+type ShutdownMessage struct {
+	URL string
 }
 
 func NewVisitRequest(links []string, wantedText string) VisitRequest {
 	return VisitRequest{
-		links:      links,
+		Links:      links,
 		wantedText: wantedText,
-		visitFunc: func(r io.Reader) error {
+		VisitFunc: func(r io.Reader) error {
 			fmt.Println("==========================")
 			b, err := io.ReadAll(r)
 			if err != nil {
@@ -66,7 +70,7 @@ func (visitor *Visitor) Receive(context *actor.Context) {
 	switch context.Message().(type) {
 	case actor.Started:
 		slog.Info("visitor started", "url", visitor.URL)
-		links, err := visitor.doVisit(visitor.URL.String(), visitor.visitFn)
+		links, err := visitor.DoVisit(visitor.URL.String(), visitor.visitFn)
 		if err != nil {
 			if err.Error() == "wanted text found" {
 				slog.Info("wanted text found, sending shutdown signal", "url", visitor.URL.String())
@@ -83,7 +87,7 @@ func (visitor *Visitor) Receive(context *actor.Context) {
 	}
 }
 
-func (visitor *Visitor) extractLinks(body io.Reader) ([]string, error) {
+func (visitor *Visitor) ExtractLinks(body io.Reader) ([]string, error) {
 	links := make([]string, 0)
 	tokenizer := html.NewTokenizer(body)
 	baseDomain := visitor.URL.Host
@@ -96,26 +100,25 @@ func (visitor *Visitor) extractLinks(body io.Reader) ([]string, error) {
 
 		if tokenType == html.StartTagToken {
 			token := tokenizer.Token()
-			if token.Data == "a" {
-				for _, attr := range token.Attr {
-					if attr.Key == "href" {
-						lurl, err := url.Parse(attr.Val)
-						if err != nil {
-							return links, err
-						}
-						actualLink := visitor.URL.ResolveReference(lurl)
+			for _, attr := range token.Attr {
+				if attr.Key == "href" {
+					lurl, err := url.Parse(attr.Val)
+					if err != nil {
+						return links, err
+					}
+					actualLink := visitor.URL.ResolveReference(lurl)
 
-						if actualLink.Host == baseDomain {
-							links = append(links, actualLink.String())
-						}
+					if actualLink.Host == baseDomain {
+						links = append(links, actualLink.String())
 					}
 				}
 			}
+
 		}
 	}
 }
 
-func (visitor *Visitor) doVisit(link string, visit VisitFunc) ([]string, error) {
+func (visitor *Visitor) DoVisit(link string, visit VisitFunc) ([]string, error) {
 	baseURL, err := url.Parse(link)
 	if err != nil {
 		return []string{}, err
@@ -128,7 +131,7 @@ func (visitor *Visitor) doVisit(link string, visit VisitFunc) ([]string, error) 
 	w := &bytes.Buffer{}
 	r := io.TeeReader(resp.Body, w)
 
-	links, err := visitor.extractLinks(r)
+	links, err := visitor.ExtractLinks(r)
 	if err != nil {
 		return []string{}, err
 	}
