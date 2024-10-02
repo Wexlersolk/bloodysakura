@@ -11,6 +11,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var (
+	gecko_port string
+	gecko_path string
+)
+
 func main() {
 
 	err := godotenv.Load()
@@ -20,6 +25,9 @@ func main() {
 
 	visitURL := os.Getenv("VISIT_URL")
 	wantedText := os.Getenv("WANTED_TEXT")
+
+	gecko_port = os.Getenv("GECKO_PORT")
+	gecko_path = os.Getenv("GECKO_PATH")
 
 	parsedURL, err := url.Parse(visitURL)
 	if err != nil {
