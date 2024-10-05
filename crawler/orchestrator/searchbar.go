@@ -13,7 +13,7 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 	slog.Info("Starting HandleSearchBar with Selenium and geckodriver")
 
 	opts := []selenium.ServiceOption{}
-	service, err := selenium.NewGeckoDriverService(main.gecko_path, main.gecko_port, opts...)
+	service, err := selenium.NewGeckoDriverService(orchestrator.config.GeckoPath, orchestrator.config.GeckoPort, opts...)
 	if err != nil {
 		slog.Error("Error starting geckodriver service", "error", err)
 		return err
@@ -22,14 +22,14 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 
 	caps := selenium.Capabilities{"browserName": "firefox"}
 
-	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://127.0.0.1:%d", main.gecko_port))
+	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://127.0.0.1:%d", orchestrator.config.GeckoPort))
 	if err != nil {
 		slog.Error("Failed to connect to WebDriver", "error", err)
 		return err
 	}
 	defer wd.Quit()
 
-	initialLink := "https://www..com"
+	initialLink := orchestrator.config.VisitUrl.String()
 	slog.Info("Opening link", "link", initialLink)
 	if err := wd.Get(initialLink); err != nil {
 		slog.Error("Failed to load page", "error", err)
@@ -42,7 +42,7 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 		return err
 	}
 
-	searchText := orchestrator.wantedText
+	searchText := orchestrator.config.WantedText
 	slog.Info("Typing text in search bar", "searchText", searchText)
 	if err := searchBox.SendKeys(searchText); err != nil {
 		slog.Error("Failed to type text in search bar", "error", err)

@@ -1,6 +1,7 @@
 package orchestrator
 
 import (
+	"bloodysakura/config"
 	"bloodysakura/crawler/visitor"
 	"log/slog"
 	"net/url"
@@ -9,19 +10,17 @@ import (
 )
 
 type Orchestrator struct {
-	visited    map[string]bool
-	visitors   map[*actor.PID]bool
-	wantedText string
-	baseDomain string
+	visited  map[string]bool
+	visitors map[*actor.PID]bool
+	config   *config.Config
 }
 
-func NewOrchestrator(wantedText, baseDomain string) actor.Producer {
+func NewOrchestrator(config *config.Config) actor.Producer {
 	return func() actor.Receiver {
 		return &Orchestrator{
-			visitors:   make(map[*actor.PID]bool),
-			visited:    make(map[string]bool),
-			wantedText: wantedText,
-			baseDomain: baseDomain,
+			visitors: make(map[*actor.PID]bool),
+			visited:  make(map[string]bool),
+			config:   config,
 		}
 	}
 }
@@ -48,10 +47,10 @@ func (orchestrator *Orchestrator) HandleVisitRequest(context *actor.Context, msg
 			return err
 		}
 
-		if parsedLink.Host == orchestrator.baseDomain {
+		if parsedLink.Host == orchestrator.config.VisitUrl.Host {
 			if _, ok := orchestrator.visited[link]; !ok {
 				slog.Info("visiting url", "url", link)
-				context.SpawnChild(visitor.NewVisitor(parsedLink, context.PID(), msg.VisitFunc, orchestrator.wantedText), "visitor/"+link)
+				context.SpawnChild(visitor.NewVisitor(parsedLink, context.PID(), msg.VisitFunc, orchestrator.config.WantedText), "visitor/"+link)
 				orchestrator.visited[link] = true
 			}
 		}
