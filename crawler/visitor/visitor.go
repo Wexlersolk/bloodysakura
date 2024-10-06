@@ -31,18 +31,22 @@ func NewVisitRequest(links []string, wantedText string) VisitRequest {
 		wantedText: wantedText,
 		VisitFunc: func(r io.Reader) error {
 			fmt.Println("==========================")
+			fmt.Println("==========================")
 			b, err := io.ReadAll(r)
 			if err != nil {
 				return err
 			}
+			fmt.Println("reading a website data")
+
 			pageContent := string(b)
-			fmt.Println(pageContent)
-			fmt.Println("==========================")
 
 			if strings.Contains(pageContent, wantedText) {
 				fmt.Printf("Wanted text '%s' found!\n", wantedText)
 				return fmt.Errorf("wanted text found")
 			}
+
+			fmt.Println("==========================")
+			fmt.Println("==========================")
 			return nil
 		},
 	}

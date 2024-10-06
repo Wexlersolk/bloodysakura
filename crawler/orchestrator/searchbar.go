@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"fmt"
 	"log/slog"
+	"net/url"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -20,7 +21,13 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 	}
 	defer service.Stop()
 
-	caps := selenium.Capabilities{"browserName": "firefox"}
+	// Set up capabilities for headless mode
+	caps := selenium.Capabilities{
+		"browserName": "firefox",
+		"moz:firefoxOptions": map[string]interface{}{
+			"args": []string{"-headless"}, // Enable headless mode
+		},
+	}
 
 	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://127.0.0.1:%d", orchestrator.config.GeckoPort))
 	if err != nil {
@@ -63,7 +70,15 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 		slog.Error("Failed to get current URL", "error", err)
 		return err
 	}
+	parsedNewURL, err := url.Parse(newURL)
+	if err != nil {
+		slog.Error("Failed to parse new URL", "error", err)
+		return err
+	}
 
 	slog.Info("New link after form submission", "newLink", newURL)
+
+	orchestrator.config.VisitUrl = parsedNewURL
+
 	return nil
 }

@@ -35,6 +35,9 @@ func (orchestrator *Orchestrator) Receive(context *actor.Context) {
 	case actor.Started:
 		slog.Info("orchestrator started")
 		orchestrator.HandleSearchBar(context)
+		slog.Info("info:", orchestrator.config.VisitUrl.String(), orchestrator.config.WantedText)
+		visitRequest := visitor.NewVisitRequest([]string{orchestrator.config.VisitUrl.String()}, orchestrator.config.WantedText)
+		context.Send(context.PID(), visitRequest)
 	case actor.Stopped:
 		slog.Info("orchestrator stopped")
 	}
