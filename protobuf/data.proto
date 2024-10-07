@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option go_package = "github.com/Wexlersolk/common/crawler";
+
+service CrawlerService {
+  rpc CreateCrawler(CreateCrawlerRequest) returns (CreateCrawlerResponse) {}
+  rpc GetCrawler(GetCrawlerRequest) returns (GetCrawlerResponse) {}
+}
+
+message CrawlerData {
+  int32 CrawlerID = 1;
+  string VisitUrl = 2;
+  string WantedText = 3;
+  int32 GeckoPort = 4;
+  string GeckoPath = 5;
+}
+
+message CreateCrawlerRequest {
+  string VisitUrl = 1;
+  string WantedText = 2;
+  int32 GeckoPort = 3;
+  string GeckoPath = 4;
+}
+
+message CreateCrawlerResponse {
+  string VisitUrl = 1;
+}
+
+message GetCrawlerRequest {
+  int32 CrawlerID = 1;
+}
+
+message GetCrawlerResponse {
+  repeated CrawlerData crawlers = 1;
+}
