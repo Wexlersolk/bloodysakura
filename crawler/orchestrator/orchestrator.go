@@ -1,8 +1,8 @@
 package orchestrator
 
 import (
-	"bloodysakura/config"
 	"bloodysakura/crawler/visitor"
+	"bloodysakura/data"
 	"log/slog"
 	"net/url"
 
@@ -12,15 +12,15 @@ import (
 type Orchestrator struct {
 	visited  map[string]bool
 	visitors map[*actor.PID]bool
-	config   *config.Config
+	data     *data.Data
 }
 
-func NewOrchestrator(config *config.Config) actor.Producer {
+func NewOrchestrator(config *data.Data) actor.Producer {
 	return func() actor.Receiver {
 		return &Orchestrator{
 			visitors: make(map[*actor.PID]bool),
 			visited:  make(map[string]bool),
-			config:   config,
+			data:     config,
 		}
 	}
 }
@@ -35,8 +35,8 @@ func (orchestrator *Orchestrator) Receive(context *actor.Context) {
 	case actor.Started:
 		slog.Info("orchestrator started")
 		orchestrator.HandleSearchBar(context)
-		slog.Info("info:", orchestrator.config.VisitUrl.String(), orchestrator.config.WantedText)
-		visitRequest := visitor.NewVisitRequest([]string{orchestrator.config.VisitUrl.String()}, orchestrator.config.WantedText)
+		slog.Info("info:", orchestrator.data.VisitUrl.String(), orchestrator.data.WantedText)
+		visitRequest := visitor.NewVisitRequest([]string{orchestrator.data.VisitUrl.String()}, orchestrator.data.WantedText)
 		context.Send(context.PID(), visitRequest)
 	case actor.Stopped:
 		slog.Info("orchestrator stopped")
@@ -50,10 +50,10 @@ func (orchestrator *Orchestrator) HandleVisitRequest(context *actor.Context, msg
 			return err
 		}
 
-		if parsedLink.Host == orchestrator.config.VisitUrl.Host {
+		if parsedLink.Host == orchestrator.data.VisitUrl.Host {
 			if _, ok := orchestrator.visited[link]; !ok {
 				slog.Info("visiting url", "url", link)
-				context.SpawnChild(visitor.NewVisitor(parsedLink, context.PID(), msg.VisitFunc, orchestrator.config.WantedText), "visitor/"+link)
+				context.SpawnChild(visitor.NewVisitor(parsedLink, context.PID(), msg.VisitFunc, orchestrator.data.WantedText), "visitor/"+link)
 				orchestrator.visited[link] = true
 			}
 		}

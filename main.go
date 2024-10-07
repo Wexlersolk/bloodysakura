@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bloodysakura/config"
 	"bloodysakura/crawler/orchestrator"
+	"bloodysakura/data"
 	"log"
 	"time"
 
@@ -11,7 +11,7 @@ import (
 
 func main() {
 
-	config, err := config.LoadConfig()
+	config, err := data.LoadData()
 	if err != nil {
 		log.Fatal("Failed to load config", err)
 	}

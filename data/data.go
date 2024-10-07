@@ -9,14 +9,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Config struct {
+type Data struct {
 	VisitUrl   *url.URL
 	WantedText string
 	GeckoPort  int
 	GeckoPath  string
 }
 
-func LoadConfig() (*Config, error) {
+func LoadData() (*Data, error) {
 
 	err := godotenv.Load()
 	if err != nil {
@@ -38,7 +38,7 @@ func LoadConfig() (*Config, error) {
 		log.Fatal("Invalid geckodriver port, must be an integer", "error", err)
 	}
 
-	return &Config{
+	return &Data{
 		VisitUrl:   parsedURL,
 		WantedText: wantedText,
 		GeckoPort:  geckoPort,
