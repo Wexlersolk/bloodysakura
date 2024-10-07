@@ -9,18 +9,17 @@ import (
 var crawlerDb = make([]*crawler.CrawlerData, 0)
 
 type CrawlerService struct {
-	// store
 }
 
-func NewOrderService() *CrawlerService {
+func NewCrawlerService() *CrawlerService {
 	return &CrawlerService{}
 }
 
-func (s *CrawlerService) CreateOrder(ctx context.Context, crawler *crawler.CrawlerData) error {
+func (s *CrawlerService) CreateCrawler(ctx context.Context, crawler *crawler.CrawlerData) error {
 	crawlerDb = append(crawlerDb, crawler)
 	return nil
 }
 
-func (s *CrawlerService) GetOrders(ctx context.Context) []*crawler.CrawlerData {
+func (s *CrawlerService) GetCrawelr(ctx context.Context) []*crawler.CrawlerData {
 	return crawlerDb
 }

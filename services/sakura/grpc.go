@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 
-	handler "github.com/Wexlersolk/services/sakura/handler/crawler"
-	"github.com/Wexlersolk/services/sakura/service"
+	handler "github.com/Wexlersolk/bloodysakura/services/sakura/handler/crawler"
+	"github.com/Wexlersolk/bloodysakura/services/sakura/service"
 	"google.golang.org/grpc"
 )
 

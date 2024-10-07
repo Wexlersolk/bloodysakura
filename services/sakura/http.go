@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Wexlersolk/sakura/services/sakura/service"
-	handler "github.com/Wexlersolk/services/sakura/handler/crawler"
+	handler "github.com/Wexlersolk/bloodysakura/services/sakura/handler/crawler"
+	"github.com/Wexlersolk/bloodysakura/services/sakura/service"
 )
 
 type httpServer struct {
