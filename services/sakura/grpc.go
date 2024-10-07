@@ -26,8 +26,8 @@ func (s *gRPCServer) Run() error {
 	grpcServer := grpc.NewServer()
 
 	// register our grpc services
-	orderService := service.NewCrawlerService()
-	handler.NewGrpcOrdersService(grpcServer, orderService)
+	crawlerService := service.NewCrawlerService()
+	handler.NewGrpcCrawlerService(grpcServer, crawlerService)
 
 	log.Println("Starting gRPC server on", s.addr)
 

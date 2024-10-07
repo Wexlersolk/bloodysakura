@@ -1,9 +1,12 @@
 run:
 	@go run main.go
 
-run-:
-	@go run services/sakura/*.go
+run-bloody:
+	@go run services/bloody/*.go
 
+run-sakura:
+	@go run services/sakura/*.go
+	
 gen:
 	@protoc \
 		--proto_path=protobuf "protobuf/data.proto" \
