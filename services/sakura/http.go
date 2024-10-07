@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	handler "github.com/sikozonpc/kitchen/services/orders/handler/orders"
-	"github.com/sikozonpc/kitchen/services/orders/service"
+	"github.com/Wexlersolk/sakura/services/sakura/service"
+	handler "github.com/Wexlersolk/services/sakura/handler/crawler"
 )
 
 type httpServer struct {
@@ -19,9 +19,9 @@ func NewHttpServer(addr string) *httpServer {
 func (s *httpServer) Run() error {
 	router := http.NewServeMux()
 
-	orderService := service.NewOrderService()
-	orderHandler := handler.NewHttpOrdersHandler(orderService)
-	orderHandler.RegisterRouter(router)
+	crawlerService := service.NewCrawlerService()
+	crawlerHandler := handler.NewHttpCrawlerHandler(crawlerService)
+	crawlerHandler.RegisterRouter(router)
 
 	log.Println("Starting server on", s.addr)
 
