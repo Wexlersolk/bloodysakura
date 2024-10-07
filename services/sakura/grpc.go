@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 
-	handler "github.com/Wexlersolk/bloody/services/sakura/handler/crawler"
 	"github.com/Wexlersolk/bloody/services/sakura/service"
+	handler "github.com/Wexlersolk/services/sakura/handler/crawler"
 	"google.golang.org/grpc"
 )
 
@@ -26,7 +26,7 @@ func (s *gRPCServer) Run() error {
 	grpcServer := grpc.NewServer()
 
 	// register our grpc services
-	orderService := service.NewOrderService()
+	orderService := service.NewCrawlerService()
 	handler.NewGrpcOrdersService(grpcServer, orderService)
 
 	log.Println("Starting gRPC server on", s.addr)
