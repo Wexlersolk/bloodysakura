@@ -20,6 +20,6 @@ func (s *CrawlerService) CreateCrawler(ctx context.Context, crawler *crawler.Cra
 	return nil
 }
 
-func (s *CrawlerService) GetCrawelr(ctx context.Context) []*crawler.CrawlerData {
+func (s *CrawlerService) GetCrawler(ctx context.Context) []*crawler.CrawlerData {
 	return crawlerDb
 }

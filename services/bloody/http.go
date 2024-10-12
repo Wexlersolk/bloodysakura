@@ -25,33 +25,39 @@ func (s *httpServer) Run() error {
 	defer conn.Close()
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		c := crawler.NewCrawlerServiceClient(conn)
+		log.Println("Received request at root endpoint")
 
+		c := crawler.NewCrawlerServiceClient(conn)
 		ctx, cancel := context.WithTimeout(r.Context(), time.Second*2)
 		defer cancel()
 
 		_, err := c.CreateCrawler(ctx, &crawler.CreateCrawlerRequest{
-
 			VisitUrl:   "github.com",
 			WantedText: "github.com",
 			GeckoPort:  4444,
 			GeckoPath:  "local",
 		})
 		if err != nil {
-			log.Fatalf("client error: %v", err)
+			log.Printf("client error: %v", err)
+			http.Error(w, "Failed to create crawler", http.StatusInternalServerError)
+			return
 		}
 
 		res, err := c.GetCrawler(ctx, &crawler.GetCrawlerRequest{
 			CrawlerID: 42,
 		})
 		if err != nil {
-			log.Fatalf("client error: %v", err)
+			log.Printf("client error: %v", err)
+			http.Error(w, "Failed to get crawler", http.StatusInternalServerError)
+			return
 		}
 
-		t := template.Must(template.New("orders").Parse(ordersTemplate))
+		log.Println("Successfully received crawler response")
 
+		t := template.Must(template.New("orders").Parse(ordersTemplate))
 		if err := t.Execute(w, res.GetCrawlers()); err != nil {
-			log.Fatalf("template error: %v", err)
+			log.Printf("template error: %v", err)
+			http.Error(w, "Failed to render template", http.StatusInternalServerError)
 		}
 	})
 
@@ -63,21 +69,21 @@ var ordersTemplate = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Kitchen Orders</title>
+    <title>Crawlers</title>
 </head>
 <body>
-    <h1>Orders List</h1>
+    <h1>Crawler Data</h1>
     <table border="1">
         <tr>
-            <th>Order ID</th>
-            <th>Customer ID</th>
-            <th>Quantity</th>
+            <th>Crawler ID</th>
+            <th>VisitUrl</th>
+            <th>WantedText</th>
         </tr>
         {{range .}}
         <tr>
-            <td>{{.OrderID}}</td>
-            <td>{{.CustomerID}}</td>
-            <td>{{.Quantity}}</td>
+            <td>{{.CrawlerID}}</td>
+            <td>{{.VisitUrl}}</td>
+            <td>{{.WantedText}}</td>
         </tr>
         {{end}}
     </table>

@@ -10,13 +10,13 @@ import (
 func NewGRPCClient(addr string) *grpc.ClientConn {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Printf("did not connect: %v", err)
 	}
 
 	return conn
 }
 
 func main() {
-	httpServer := NewHttpServer(":1000")
+	httpServer := NewHttpServer(":8888")
 	httpServer.Run()
 }

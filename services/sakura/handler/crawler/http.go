@@ -32,7 +32,7 @@ func (h *CrawlerHttpHandler) CreateCrawler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	crawler := &crawler.CrawlerData{
+	crawlerInstance := &crawler.CrawlerData{
 		CrawlerID:  42,
 		VisitUrl:   "github.com",
 		WantedText: "github.com",
@@ -40,7 +40,7 @@ func (h *CrawlerHttpHandler) CreateCrawler(w http.ResponseWriter, r *http.Reques
 		GeckoPath:  "local",
 	}
 
-	err = h.crawlerService.CreateCrawler(r.Context(), crawler)
+	err = h.crawlerService.CreateCrawler(r.Context(), crawlerInstance)
 	if err != nil {
 		util.WriteError(w, http.StatusInternalServerError, err)
 		return

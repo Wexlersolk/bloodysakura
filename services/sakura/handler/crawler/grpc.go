@@ -21,7 +21,7 @@ func NewGrpcCrawlerService(grpc *grpc.Server, crawlerService types.CrawlerServic
 	crawler.RegisterCrawlerServiceServer(grpc, gRPCHandler)
 }
 
-func (h *CrawlerGrpcHandler) GetCrowler(ctx context.Context, req *crawler.GetCrawlerRequest) (*crawler.GetCrawlerResponse, error) {
+func (h *CrawlerGrpcHandler) GetCrawler(ctx context.Context, req *crawler.GetCrawlerRequest) (*crawler.GetCrawlerResponse, error) {
 	o := h.crawlerService.GetCrawler(ctx)
 	res := &crawler.GetCrawlerResponse{
 		Crawlers: o,
@@ -31,7 +31,7 @@ func (h *CrawlerGrpcHandler) GetCrowler(ctx context.Context, req *crawler.GetCra
 }
 
 func (h *CrawlerGrpcHandler) CreateCrawler(ctx context.Context, req *crawler.CreateCrawlerRequest) (*crawler.CreateCrawlerResponse, error) {
-	crawler := &crawler.CrawlerData{
+	crawlerInstance := &crawler.CrawlerData{
 		CrawlerID:  42,
 		VisitUrl:   "github.com",
 		WantedText: "github.com",
@@ -39,7 +39,7 @@ func (h *CrawlerGrpcHandler) CreateCrawler(ctx context.Context, req *crawler.Cre
 		GeckoPath:  "local",
 	}
 
-	err := h.crawlerService.CreateCrawler(ctx, crawler)
+	err := h.crawlerService.CreateCrawler(ctx, crawlerInstance)
 	if err != nil {
 		return nil, err
 	}
