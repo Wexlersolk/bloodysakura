@@ -3,7 +3,6 @@ package orchestrator
 import (
 	"fmt"
 	"log/slog"
-	"net/url"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -14,7 +13,7 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 	slog.Info("Starting HandleSearchBar with Selenium and geckodriver")
 
 	opts := []selenium.ServiceOption{}
-	service, err := selenium.NewGeckoDriverService(orchestrator.data.GeckoPath, orchestrator.data.GeckoPort, opts...)
+	service, err := selenium.NewGeckoDriverService(orchestrator.crawlerData.GeckoPath, int(orchestrator.crawlerData.GeckoPort), opts...)
 	if err != nil {
 		slog.Error("Error starting geckodriver service", "error", err)
 		return err
@@ -29,14 +28,14 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 		},
 	}
 
-	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://127.0.0.1:%d", orchestrator.data.GeckoPort))
+	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://127.0.0.1:%d", orchestrator.crawlerData.GeckoPort))
 	if err != nil {
 		slog.Error("Failed to connect to WebDriver", "error", err)
 		return err
 	}
 	defer wd.Quit()
 
-	initialLink := orchestrator.data.VisitUrl.String()
+	initialLink := orchestrator.crawlerData.VisitUrl
 	slog.Info("Opening link", "link", initialLink)
 	if err := wd.Get(initialLink); err != nil {
 		slog.Error("Failed to load page", "error", err)
@@ -49,7 +48,7 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 		return err
 	}
 
-	searchText := orchestrator.data.WantedText
+	searchText := orchestrator.crawlerData.WantedText
 	slog.Info("Typing text in search bar", "searchText", searchText)
 	if err := searchBox.SendKeys(searchText); err != nil {
 		slog.Error("Failed to type text in search bar", "error", err)
@@ -70,15 +69,11 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 		slog.Error("Failed to get current URL", "error", err)
 		return err
 	}
-	parsedNewURL, err := url.Parse(newURL)
-	if err != nil {
-		slog.Error("Failed to parse new URL", "error", err)
-		return err
-	}
+	parsedNewURL := newURL
 
 	slog.Info("New link after form submission", "newLink", newURL)
 
-	orchestrator.data.VisitUrl = parsedNewURL
+	orchestrator.crawlerData.VisitUrl = parsedNewURL
 
 	return nil
 }

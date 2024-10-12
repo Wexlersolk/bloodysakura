@@ -19,7 +19,7 @@ func NewHttpServer(addr string) *httpServer {
 func (s *httpServer) Run() error {
 	router := http.NewServeMux()
 
-	crawlerService := service.NewCrawlerService()
+	crawlerService := service.NewSakuraService()
 	crawlerHandler := handler.NewHttpCrawlerHandler(crawlerService)
 	crawlerHandler.RegisterRouter(router)
 

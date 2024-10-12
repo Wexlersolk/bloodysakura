@@ -31,12 +31,7 @@ func (s *httpServer) Run() error {
 		ctx, cancel := context.WithTimeout(r.Context(), time.Second*2)
 		defer cancel()
 
-		_, err := c.CreateCrawler(ctx, &crawler.CreateCrawlerRequest{
-			VisitUrl:   "github.com",
-			WantedText: "github.com",
-			GeckoPort:  4444,
-			GeckoPath:  "local",
-		})
+		_, err := c.CreateCrawler(ctx, &crawler.CreateCrawlerRequest{})
 		if err != nil {
 			log.Printf("client error: %v", err)
 			http.Error(w, "Failed to create crawler", http.StatusInternalServerError)
@@ -54,7 +49,7 @@ func (s *httpServer) Run() error {
 
 		log.Println("Successfully received crawler response")
 
-		t := template.Must(template.New("orders").Parse(ordersTemplate))
+		t := template.Must(template.New("crawlers").Parse(ordersTemplate))
 		if err := t.Execute(w, res.GetCrawlers()); err != nil {
 			log.Printf("template error: %v", err)
 			http.Error(w, "Failed to render template", http.StatusInternalServerError)

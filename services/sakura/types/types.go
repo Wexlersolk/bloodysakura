@@ -6,7 +6,7 @@ import (
 	"github.com/Wexlersolk/bloodysakura/services/common/genproto/crawler"
 )
 
-type CrawlerService interface {
-	CreateCrawler(context.Context, *crawler.CrawlerData) error
-	GetCrawler(context.Context) []*crawler.CrawlerData
+type SakuraService interface {
+	CreateSakura(context.Context, *crawler.CrawlerData) error
+	GetSakura(context.Context) []*crawler.CrawlerData
 }

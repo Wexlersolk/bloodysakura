@@ -9,12 +9,12 @@ import (
 )
 
 type CrawlerHttpHandler struct {
-	crawlerService types.CrawlerService
+	sakuraService types.SakuraService
 }
 
-func NewHttpCrawlerHandler(crawlerService types.CrawlerService) *CrawlerHttpHandler {
+func NewHttpCrawlerHandler(sakuraService types.SakuraService) *CrawlerHttpHandler {
 	handler := &CrawlerHttpHandler{
-		crawlerService: crawlerService,
+		sakuraService: sakuraService,
 	}
 
 	return handler
@@ -40,7 +40,7 @@ func (h *CrawlerHttpHandler) CreateCrawler(w http.ResponseWriter, r *http.Reques
 		GeckoPath:  "local",
 	}
 
-	err = h.crawlerService.CreateCrawler(r.Context(), crawlerInstance)
+	err = h.sakuraService.CreateSakura(r.Context(), crawlerInstance)
 	if err != nil {
 		util.WriteError(w, http.StatusInternalServerError, err)
 		return

@@ -1,26 +1,26 @@
 package orchestrator
 
 import (
-	"bloodysakura/crawler/visitor"
-	"bloodysakura/data"
 	"log/slog"
 	"net/url"
 
+	"github.com/Wexlersolk/bloodysakura/services/common/genproto/crawler"
+	"github.com/Wexlersolk/bloodysakura/services/sakura/service/visitor"
 	"github.com/anthdm/hollywood/actor"
 )
 
 type Orchestrator struct {
-	visited  map[string]bool
-	visitors map[*actor.PID]bool
-	data     *data.Data
+	visited     map[string]bool
+	visitors    map[*actor.PID]bool
+	crawlerData *crawler.CrawlerData
 }
 
-func NewOrchestrator(config *data.Data) actor.Producer {
+func NewOrchestrator(crawlerData *crawler.CrawlerData) actor.Producer {
 	return func() actor.Receiver {
 		return &Orchestrator{
-			visitors: make(map[*actor.PID]bool),
-			visited:  make(map[string]bool),
-			data:     config,
+			visitors:    make(map[*actor.PID]bool),
+			visited:     make(map[string]bool),
+			crawlerData: crawlerData,
 		}
 	}
 }
@@ -35,8 +35,8 @@ func (orchestrator *Orchestrator) Receive(context *actor.Context) {
 	case actor.Started:
 		slog.Info("orchestrator started")
 		orchestrator.HandleSearchBar(context)
-		slog.Info("info:", orchestrator.data.VisitUrl.String(), orchestrator.data.WantedText)
-		visitRequest := visitor.NewVisitRequest([]string{orchestrator.data.VisitUrl.String()}, orchestrator.data.WantedText)
+		slog.Info("info:", orchestrator.crawlerData.VisitUrl, orchestrator.crawlerData.WantedText)
+		visitRequest := visitor.NewVisitRequest([]string{orchestrator.crawlerData.VisitUrl}, orchestrator.crawlerData.WantedText)
 		context.Send(context.PID(), visitRequest)
 	case actor.Stopped:
 		slog.Info("orchestrator stopped")
@@ -50,10 +50,10 @@ func (orchestrator *Orchestrator) HandleVisitRequest(context *actor.Context, msg
 			return err
 		}
 
-		if parsedLink.Host == orchestrator.data.VisitUrl.Host {
+		if parsedLink.Host == orchestrator.crawlerData.VisitUrl {
 			if _, ok := orchestrator.visited[link]; !ok {
 				slog.Info("visiting url", "url", link)
-				context.SpawnChild(visitor.NewVisitor(parsedLink, context.PID(), msg.VisitFunc, orchestrator.data.WantedText), "visitor/"+link)
+				context.SpawnChild(visitor.NewVisitor(parsedLink, context.PID(), msg.VisitFunc, orchestrator.crawlerData.WantedText), "visitor/"+link)
 				orchestrator.visited[link] = true
 			}
 		}

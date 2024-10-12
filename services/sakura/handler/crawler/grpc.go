@@ -9,20 +9,20 @@ import (
 )
 
 type CrawlerGrpcHandler struct {
-	crawlerService types.CrawlerService
+	sakuraService types.SakuraService
 	crawler.UnimplementedCrawlerServiceServer
 }
 
-func NewGrpcCrawlerService(grpc *grpc.Server, crawlerService types.CrawlerService) {
+func NewGrpcCrawlerService(grpc *grpc.Server, crawlerService types.SakuraService) {
 	gRPCHandler := &CrawlerGrpcHandler{
-		crawlerService: crawlerService,
+		sakuraService: crawlerService,
 	}
 
 	crawler.RegisterCrawlerServiceServer(grpc, gRPCHandler)
 }
 
 func (h *CrawlerGrpcHandler) GetCrawler(ctx context.Context, req *crawler.GetCrawlerRequest) (*crawler.GetCrawlerResponse, error) {
-	o := h.crawlerService.GetCrawler(ctx)
+	o := h.sakuraService.GetSakura(ctx)
 	res := &crawler.GetCrawlerResponse{
 		Crawlers: o,
 	}
@@ -34,12 +34,12 @@ func (h *CrawlerGrpcHandler) CreateCrawler(ctx context.Context, req *crawler.Cre
 	crawlerInstance := &crawler.CrawlerData{
 		CrawlerID:  42,
 		VisitUrl:   "github.com",
-		WantedText: "github.com",
+		WantedText: "githublol.com",
 		GeckoPort:  4444,
 		GeckoPath:  "local",
 	}
 
-	err := h.crawlerService.CreateCrawler(ctx, crawlerInstance)
+	err := h.sakuraService.CreateSakura(ctx, crawlerInstance)
 	if err != nil {
 		return nil, err
 	}
