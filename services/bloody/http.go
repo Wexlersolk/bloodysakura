@@ -49,7 +49,15 @@ func (s *httpServer) Run() error {
 
 		log.Println("Successfully received crawler response")
 
-		t := template.Must(template.New("crawlers").Parse(ordersTemplate))
+		// Load template from file
+		t, err := template.ParseFiles("crawler.html")
+		if err != nil {
+			log.Printf("template error: %v", err)
+			http.Error(w, "Failed to load template", http.StatusInternalServerError)
+			return
+		}
+
+		// Execute the template with the data
 		if err := t.Execute(w, res.GetCrawlers()); err != nil {
 			log.Printf("template error: %v", err)
 			http.Error(w, "Failed to render template", http.StatusInternalServerError)
@@ -60,27 +68,3 @@ func (s *httpServer) Run() error {
 	return http.ListenAndServe(s.addr, router)
 }
 
-var ordersTemplate = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Crawlers</title>
-</head>
-<body>
-    <h1>Crawler Data</h1>
-    <table border="1">
-        <tr>
-            <th>Crawler ID</th>
-            <th>VisitUrl</th>
-            <th>WantedText</th>
-        </tr>
-        {{range .}}
-        <tr>
-            <td>{{.CrawlerID}}</td>
-            <td>{{.VisitUrl}}</td>
-            <td>{{.WantedText}}</td>
-        </tr>
-        {{end}}
-    </table>
-</body>
-</html>`
