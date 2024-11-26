@@ -13,6 +13,7 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 	slog.Info("Starting HandleSearchBar with Selenium and geckodriver")
 
 	opts := []selenium.ServiceOption{}
+	slog.Info(orchestrator.crawlerData.GeckoPath)
 	service, err := selenium.NewGeckoDriverService(orchestrator.crawlerData.GeckoPath, int(orchestrator.crawlerData.GeckoPort), opts...)
 	if err != nil {
 		slog.Error("Error starting geckodriver service", "error", err)

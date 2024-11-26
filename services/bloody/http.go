@@ -31,12 +31,18 @@ func (s *httpServer) Run() error {
 		ctx, cancel := context.WithTimeout(r.Context(), time.Second*2)
 		defer cancel()
 
+		// Set a longer timeout
+		ctx, cancel = context.WithTimeout(context.Background(), 1000*time.Second) // Adjust the timeout as needed
+		defer cancel()
+
 		_, err := c.CreateCrawler(ctx, &crawler.CreateCrawlerRequest{})
 		if err != nil {
 			log.Printf("client error: %v", err)
 			http.Error(w, "Failed to create crawler", http.StatusInternalServerError)
 			return
 		}
+
+		log.Println("Crawler created")
 
 		res, err := c.GetCrawler(ctx, &crawler.GetCrawlerRequest{
 			CrawlerID: 42,
@@ -50,7 +56,7 @@ func (s *httpServer) Run() error {
 		log.Println("Successfully received crawler response")
 
 		// Load template from file
-		t, err := template.ParseFiles("crawler.html")
+		t, err := template.ParseFiles("/home/wexlersolk/work/bloodysakura/services/bloody/crawler.html")
 		if err != nil {
 			log.Printf("template error: %v", err)
 			http.Error(w, "Failed to load template", http.StatusInternalServerError)
@@ -67,4 +73,3 @@ func (s *httpServer) Run() error {
 	log.Println("Starting server on", s.addr)
 	return http.ListenAndServe(s.addr, router)
 }
-

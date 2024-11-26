@@ -4,7 +4,6 @@ go 1.23.0
 
 require (
 	github.com/anthdm/hollywood v1.0.2
-	github.com/joho/godotenv v1.5.1
 	github.com/tebeka/selenium v0.9.9
 	golang.org/x/net v0.29.0
 	google.golang.org/grpc v1.67.1

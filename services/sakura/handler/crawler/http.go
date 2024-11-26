@@ -34,10 +34,10 @@ func (h *CrawlerHttpHandler) CreateCrawler(w http.ResponseWriter, r *http.Reques
 
 	crawlerInstance := &crawler.CrawlerData{
 		CrawlerID:  42,
-		VisitUrl:   "github.com",
+		VisitUrl:   "kobo.com",
 		WantedText: "github.com",
 		GeckoPort:  4444,
-		GeckoPath:  "local",
+		GeckoPath:  "/usr/local/bin/geckodriver",
 	}
 
 	err = h.sakuraService.CreateSakura(r.Context(), crawlerInstance)
