@@ -10,20 +10,21 @@ service CrawlerService {
 message CrawlerData {
   int32 CrawlerID = 1;
   string VisitUrl = 2;
-  string WantedText = 3;
+  repeated string WantedText = 3;
   int32 GeckoPort = 4;
   string GeckoPath = 5;
 }
 
 message CreateCrawlerRequest {
-  string VisitUrl = 1;
-  string WantedText = 2;
-  int32 GeckoPort = 3;
-  string GeckoPath = 4;
+  int32 CrawlerID = 1;
+  string VisitUrl = 2;
+  repeated string WantedText = 3;
+  int32 GeckoPort = 4;
+  string GeckoPath = 5;
 }
 
 message CreateCrawlerResponse {
-  string VisitUrl = 1;
+  string Status = 1;
 }
 
 message GetCrawlerRequest {

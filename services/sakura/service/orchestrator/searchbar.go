@@ -49,13 +49,17 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 		return err
 	}
 
-	searchText := orchestrator.crawlerData.WantedText
+	// Extract the first search term from WantedText
+	searchText := orchestrator.crawlerData.WantedText[0]
 	slog.Info("Typing text in search bar", "searchText", searchText)
+
+	// Type only the first item from the WantedText array
 	if err := searchBox.SendKeys(searchText); err != nil {
 		slog.Error("Failed to type text in search bar", "error", err)
 		return err
 	}
 
+	// Submit the search using JavaScript (press Enter)
 	slog.Info("Submitting the search using JavaScript")
 	jsScript := `var e = new KeyboardEvent('keydown', {bubbles: true, cancelable: true, keyCode: 13}); arguments[0].dispatchEvent(e);`
 	if _, err := wd.ExecuteScript(jsScript, []interface{}{searchBox}); err != nil {
@@ -65,6 +69,7 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 
 	time.Sleep(5 * time.Second)
 
+	// Get the new URL after the search submission
 	newURL, err := wd.CurrentURL()
 	if err != nil {
 		slog.Error("Failed to get current URL", "error", err)
@@ -74,7 +79,9 @@ func (orchestrator *Orchestrator) HandleSearchBar(context *actor.Context) error 
 
 	slog.Info("New link after form submission", "newLink", newURL)
 
+	// Update the VisitUrl with the new URL
 	orchestrator.crawlerData.VisitUrl = parsedNewURL
 
 	return nil
 }
+

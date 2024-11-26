@@ -35,7 +35,7 @@ func (h *CrawlerHttpHandler) CreateCrawler(w http.ResponseWriter, r *http.Reques
 	crawlerInstance := &crawler.CrawlerData{
 		CrawlerID:  42,
 		VisitUrl:   "kobo.com",
-		WantedText: "github.com",
+		WantedText: []string{"A Thousand Sons", "Pages", "Length"},
 		GeckoPort:  4444,
 		GeckoPath:  "/usr/local/bin/geckodriver",
 	}
@@ -46,6 +46,6 @@ func (h *CrawlerHttpHandler) CreateCrawler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	res := &crawler.CreateCrawlerResponse{VisitUrl: "success"}
+	res := &crawler.CreateCrawlerResponse{Status: "success"}
 	util.WriteJSON(w, http.StatusOK, res)
 }

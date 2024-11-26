@@ -18,14 +18,14 @@ type VisitFunc func(io.Reader) error
 type VisitRequest struct {
 	Links      []string
 	VisitFunc  VisitFunc
-	wantedText string
+	wantedText []string
 }
 
 type ShutdownMessage struct {
 	URL string
 }
 
-func NewVisitRequest(links []string, wantedText string) VisitRequest {
+func NewVisitRequest(links []string, wantedText []string) VisitRequest {
 	return VisitRequest{
 		Links:      links,
 		wantedText: wantedText,
@@ -36,13 +36,22 @@ func NewVisitRequest(links []string, wantedText string) VisitRequest {
 			if err != nil {
 				return err
 			}
-			fmt.Println("reading a website data")
+			fmt.Println("reading website data")
 
 			pageContent := string(b)
 
-			if strings.Contains(pageContent, wantedText) {
-				fmt.Printf("Wanted text '%s' found!\n", wantedText)
-				return fmt.Errorf("wanted text found")
+			allFound := true
+			for _, text := range wantedText {
+				if !strings.Contains(pageContent, text) {
+					allFound = false
+					fmt.Printf("Wanted text '%s' not found.\n", text)
+				} else {
+					fmt.Printf("Wanted text '%s' found!\n", text)
+				}
+			}
+
+			if allFound {
+				return fmt.Errorf("all wanted texts found")
 			}
 
 			fmt.Println("==========================")
@@ -56,10 +65,10 @@ type Visitor struct {
 	managerPID *actor.PID
 	URL        *url.URL
 	visitFn    VisitFunc
-	wantedText string
+	wantedText []string
 }
 
-func NewVisitor(url *url.URL, mpid *actor.PID, visitFn VisitFunc, wantedText string) actor.Producer {
+func NewVisitor(url *url.URL, mpid *actor.PID, visitFn VisitFunc, wantedText []string) actor.Producer {
 	return func() actor.Receiver {
 		return &Visitor{
 			URL:        url,

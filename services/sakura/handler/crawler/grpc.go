@@ -32,11 +32,11 @@ func (h *CrawlerGrpcHandler) GetCrawler(ctx context.Context, req *crawler.GetCra
 
 func (h *CrawlerGrpcHandler) CreateCrawler(ctx context.Context, req *crawler.CreateCrawlerRequest) (*crawler.CreateCrawlerResponse, error) {
 	crawlerInstance := &crawler.CrawlerData{
-		CrawlerID:  42,
-		VisitUrl:   "https://www.kobo.com/",
-		WantedText: "The Thouthand Sons",
-		GeckoPort:  4444,
-		GeckoPath:  "/usr/local/bin/geckodriver",
+		CrawlerID:  req.CrawlerID,
+		VisitUrl:   req.VisitUrl,
+		WantedText: req.WantedText,
+		GeckoPort:  req.GeckoPort,
+		GeckoPath:  req.GeckoPath,
 	}
 
 	err := h.sakuraService.CreateSakura(ctx, crawlerInstance)
@@ -44,9 +44,7 @@ func (h *CrawlerGrpcHandler) CreateCrawler(ctx context.Context, req *crawler.Cre
 		return nil, err
 	}
 
-	res := &crawler.CreateCrawlerResponse{
-		VisitUrl: "success",
-	}
-
-	return res, nil
+	return &crawler.CreateCrawlerResponse{
+		Status: "success",
+	}, nil
 }

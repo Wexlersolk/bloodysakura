@@ -28,14 +28,18 @@ func (s *httpServer) Run() error {
 		log.Println("Received request at root endpoint")
 
 		c := crawler.NewCrawlerServiceClient(conn)
-		ctx, cancel := context.WithTimeout(r.Context(), time.Second*2)
+		ctx, cancel := context.WithTimeout(r.Context(), time.Second*1000)
 		defer cancel()
 
-		// Set a longer timeout
-		ctx, cancel = context.WithTimeout(context.Background(), 1000*time.Second) // Adjust the timeout as needed
-		defer cancel()
+		req := &crawler.CreateCrawlerRequest{
+			CrawlerID:  42,
+			VisitUrl:   "https://fantasyaudiobook.com",
+			WantedText: []string{"A Thousand Sons", "Pages", "Length"},
+			GeckoPort:  4444,
+			GeckoPath:  "/usr/local/bin/geckodriver",
+		}
 
-		_, err := c.CreateCrawler(ctx, &crawler.CreateCrawlerRequest{})
+		_, err := c.CreateCrawler(ctx, req)
 		if err != nil {
 			log.Printf("client error: %v", err)
 			http.Error(w, "Failed to create crawler", http.StatusInternalServerError)
